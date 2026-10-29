@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'images_card.dart';
+import 'info_card.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -10,254 +13,180 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mobile Game',
+      title: 'Memory Game',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.indigo,
+        scaffoldBackgroundColor: const Color(0xfff4f6fb),
       ),
-      home: const HomePage(),
+      home: const MemoryGamePage(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class MemoryGamePage extends StatefulWidget {
+  const MemoryGamePage({Key? key}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<MemoryGamePage> createState() => _MemoryGamePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final List<String> _tic = <String>['', '', '', '', '', '', '', '', ''];
+class _MemoryGamePageState extends State<MemoryGamePage> {
+  final Game _game = Game();
+  final Set<int> _matchedCards = <int>{};
+  int? _firstCard;
+  bool _isChecking = false;
+  int _moves = 0;
 
-  // Data lama:
-  // TextStyle text = const TextStyle(
-  //   fontSize: 20.0,
-  //   color: Colors.white,
-  //   fontWeight: FontWeight.w800,
-  // );
-  TextStyle text = const TextStyle(
-    fontSize: 20.0,
-    color: Colors.black,
-    fontWeight: FontWeight.w800,
-  );
-
-  // Data lama:
-  // Color p1 = Colors.red;
-  // Color p2 = Colors.blue;
-  Color p1 = Colors.yellow;
-  Color p2 = Colors.green;
-
-  bool _player1 = true;
-  bool isPressed = false;
-  int _fill = 0;
-
-  void _clearBoard() {
-    setState(() {
-      for (int i = 0; i < 9; i++) {
-        _tic[i] = '';
-      }
-      // Data lama:
-      // p1 = Colors.red;
-      // p2 = Colors.blue;
-      p1 = Colors.yellow;
-      p2 = Colors.green;
-    });
-    isPressed = false;
-    _fill = 0;
+  @override
+  void initState() {
+    super.initState();
+    _newGame();
   }
 
-  void _tapped(int index) {
+  void _newGame() {
     setState(() {
-      if (_player1 && _tic[index] == '') {
-        _tic[index] = 'o';
-        _fill += 1;
-      } else if (!_player1 && _tic[index] == '') {
-        _tic[index] = 'x';
-        _fill += 1;
-      }
-      _player1 = !_player1;
-      _verify();
+      _game.initGame();
+      _matchedCards.clear();
+      _firstCard = null;
+      _isChecking = false;
+      _moves = 0;
     });
   }
 
-  void _verify() {
-    if (_tic[0] == _tic[1] && _tic[0] == _tic[2] && _tic[0] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[0] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
+  bool _isVisible(int index) {
+    return _matchedCards.contains(index) || _firstCard == index;
+  }
+
+  Future<void> _selectCard(int index) async {
+    if (_isChecking || _isVisible(index)) {
+      return;
     }
-    if (_tic[3] == _tic[4] && _tic[3] == _tic[5] && _tic[3] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[3] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
+
+    if (_firstCard == null) {
+      setState(() => _firstCard = index);
+      return;
     }
-    if (_tic[6] == _tic[7] && _tic[6] == _tic[8] && _tic[6] != '') {
-      isPressed = true;
+
+    final int firstCard = _firstCard!;
+    setState(() {
+      _isChecking = true;
+      _moves++;
+    });
+
+    if (_game.gameImg[firstCard] == _game.gameImg[index]) {
       setState(() {
-        if (_tic[6] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
+        _matchedCards.addAll(<int>[firstCard, index]);
+        _firstCard = null;
+        _isChecking = false;
       });
+      return;
     }
-    if (_tic[0] == _tic[3] && _tic[0] == _tic[6] && _tic[0] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[0] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
+
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) {
+      return;
     }
-    if (_tic[1] == _tic[4] && _tic[1] == _tic[7] && _tic[1] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[1] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
-    }
-    if (_tic[2] == _tic[5] && _tic[2] == _tic[8] && _tic[2] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[2] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
-    }
-    if (_tic[0] == _tic[4] && _tic[0] == _tic[8] && _tic[0] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[0] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
-    }
-    if (_tic[2] == _tic[4] && _tic[2] == _tic[6] && _tic[2] != '') {
-      isPressed = true;
-      setState(() {
-        if (_tic[2] == 'x') {
-          // Data lama: p2 = Colors.white;
-          p2 = Colors.black;
-        } else {
-          // Data lama: p1 = Colors.white;
-          p1 = Colors.black;
-        }
-      });
-    }
-    if (_fill == 9) {
-      isPressed = true;
-      setState(() {
-        // Data lama:
-        // p1 = Colors.white;
-        // p2 = Colors.white;
-        p1 = Colors.black;
-        p2 = Colors.black;
-      });
-    }
+    setState(() {
+      _firstCard = null;
+      _isChecking = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isComplete = _matchedCards.length == _game.gameImg.length;
+
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        // Data lama:
-        // backgroundColor: Colors.black,
-        backgroundColor: Colors.white,
-        title: Text(
-          'Tic Tac Toe',
-          style: text,
-        ),
+        title: const Text('Memory Game'),
         centerTitle: true,
-      ),
-      // Data lama:
-      // backgroundColor: Colors.black,
-      backgroundColor: Colors.white,
-      body: Column(
-        children: <Widget>[
-          _table(),
-          if (isPressed)
-            ElevatedButton(
-              onPressed: _clearBoard,
-              child: const Text('Main Lagi..'),
-            ),
+        actions: <Widget>[
+          IconButton(
+            onPressed: _newGame,
+            tooltip: 'Mulai ulang',
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
-    );
-  }
-
-  Expanded _table() {
-    return Expanded(
-      flex: 3,
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: 9,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 16.0,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: <Widget>[
+              InfoCard(moves: _moves),
+              const SizedBox(height: 16),
+              Expanded(
+                child: GridView.builder(
+                  itemCount: _game.gameImg.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemBuilder: (BuildContext context, int index) {
+                    final bool visible = _isVisible(index);
+                    return Semantics(
+                      label: visible
+                          ? 'Kartu gambar ${index + 1}'
+                          : 'Kartu tertutup ${index + 1}',
+                      button: true,
+                      child: GestureDetector(
+                        onTap: () => _selectCard(index),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            color: visible ? Colors.white : Colors.indigo,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: visible
+                                  ? Colors.indigo
+                                  : Colors.indigo.shade700,
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: visible
+                                ? _game.gameImg[index] is String
+                                    ? Image.asset(
+                                        _game.gameImg[index] as String,
+                                        width: 44,
+                                        height: 44,
+                                      )
+                                    : Icon(
+                                        _game.gameImg[index] as IconData,
+                                        size: 36,
+                                        color: Colors.indigo,
+                                      )
+                                : Image.asset(
+                                    Game.hiddenCardPath,
+                                    width: 44,
+                                    height: 44,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (isComplete) ...<Widget>[
+                const SizedBox(height: 12),
+                const Text(
+                  'Selamat! Semua pasangan ditemukan.',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: _newGame,
+                  child: const Text('Main Lagi'),
+                ),
+              ],
+            ],
+          ),
         ),
-        itemBuilder: (BuildContext context, int index) {
-          return GestureDetector(
-            onTap: () {
-              _tapped(index);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                border: Border.all(color: Colors.yellow),
-                // Data lama:
-                // color: _tic[index] == ''
-                //     ? Colors.white
-                //     : _tic[index] == 'x'
-                //         ? p1
-                //         : p2,
-                color: _tic[index] == ''
-                    ? Colors.black
-                    : _tic[index] == 'x'
-                        ? p1
-                        : p2,
-              ),
-              child: const Center(
-                child: Text(''),
-              ),
-            ),
-          );
-        },
       ),
     );
   }
